@@ -10,11 +10,11 @@ namespace config {
 
     int constexpr M_EN_PIN = 2;
 
-    int constexpr M2_DIR_PIN = 4;
-    int constexpr M2_STEP_PIN = 3;
+    int constexpr M2_DIR_PIN = 12;
+    int constexpr M2_STEP_PIN = 8;
 
-    int constexpr M1_DIR_PIN = 6;
-    int constexpr M1_STEP_PIN = 5;
+    int constexpr M1_DIR_PIN = 7;
+    int constexpr M1_STEP_PIN = 4;
 
     int constexpr OD1_CS_PIN = 10;
     int constexpr OD2_CS_PIN = 9;
