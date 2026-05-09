@@ -24,6 +24,8 @@ public:
     [[nodiscard]] Mission::Type getCurrentMissionType() const;
     [[nodiscard]] bool parseMissionMessage(String const &message, Mission &outMission);
     void cancelAllMissions();
+    void startYellowTeamMissions();
+    void startBlueTeamMissions();
 
     void addFakeMissionForTest();
 protected:

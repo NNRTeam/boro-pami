@@ -9,8 +9,9 @@ class Motor{
     public:
         Motor(int dirPin, int stepPin, int sensorCS, bool invertSensor, bool invertMotor, double wheelPerimeter, void (*stepCallback)(bool forward));
         void run();
+        void runFromTimerISR();
         void setLinearSpeed(float speed);
-        void stop() { m_interStepTime = 0; m_speed = 0.0; }
+        void stop();
         void UpdateWeelPerimeter(double weelPerimeter) { m_WheelPerimeter = weelPerimeter; }
         [[nodiscard]] float getWheelPerimeter() const { return m_WheelPerimeter; }
         [[nodiscard]] float getFeedbackSpeed(unsigned int *dt, unsigned int *t);
@@ -27,6 +28,9 @@ class Motor{
 
         volatile unsigned int m_interStepTime = 0; // Cached inter-step time in µs (0 = stopped)
         volatile bool m_cachedWheelForward = true;  // Cached wheel direction for ISR
+        volatile unsigned int m_ticksPerStep = 0;
+        volatile unsigned int m_ticksUntilStep = 0;
+        volatile bool m_stepPulseHigh = false;
 
         uint64_t m_dt=0.0;                //delta t
         uint64_t m_t=0.0;                 //temps

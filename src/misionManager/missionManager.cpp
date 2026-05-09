@@ -174,6 +174,28 @@ void missionManager::cancelAllMissions()
     }
 }
 
+void missionManager::startYellowTeamMissions()
+{
+    m_logger.info("Starting yellow team missions");
+    Mission mission1(1, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, 0.0f, 0.0f);
+    addMission(mission1);
+    Mission mission2(2, Mission::Type::TURN, Mission::Options::NONE, Mission::Direction::FORWARD, 0.0f, 0.0f, 3.14159f/2.0f);
+    addMission(mission2);
+    Mission mission3(3, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, 0.5f, 0.0f);
+    addMission(mission3);
+}
+
+void missionManager::startBlueTeamMissions()
+{
+    m_logger.info("Starting blue team missions");
+    Mission mission1(1, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, 0.0f, 0.0f);
+    addMission(mission1);
+    Mission mission2(2, Mission::Type::TURN, Mission::Options::NONE, Mission::Direction::FORWARD, 0.0f, 0.0f, -3.14159f/2.0f);
+    addMission(mission2);
+    Mission mission3(3, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, -0.5f, 0.0f);
+    addMission(mission3);
+}
+
 void missionManager::addFakeMissionForTest()
 {
     Mission mission1(1, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, 0.0f, 0.0f);
@@ -192,7 +214,6 @@ void missionManager::addFakeMissionForTest()
     addMission(mission7);
     Mission mission8(8, Mission::Type::TURN, Mission::Options::NONE, Mission::Direction::FORWARD, 0.0f, 0.0f, 0.0f);
     addMission(mission8);
-
     Mission mission11(11, Mission::Type::GO, Mission::Options::NONE, Mission::Direction::FORWARD, 0.5f, 0.0f, 0.0f);
     addMission(mission11);
     Mission mission12(12, Mission::Type::TURN, Mission::Options::NONE, Mission::Direction::FORWARD, 0.0f, 0.0f, 3.14159f/2.0f);

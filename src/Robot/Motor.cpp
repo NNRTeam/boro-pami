@@ -8,6 +8,19 @@
 
 #define M_PI 3.14159265358979323846
 
+static unsigned int stepIntervalUsToTicks(unsigned int intervalUs)
+{
+    if (intervalUs == 0) {
+        return 0;
+    }
+    float const ticksF = (intervalUs * config::MOTOR_TIMER_FREQUENCY_HZ) / 1e6f;
+    unsigned int ticks = (unsigned int)(ticksF + 0.5f);
+    if (ticks == 0) {
+        ticks = 1;
+    }
+    return ticks;
+}
+
 unsigned int calculerTempsEntreSteps(
     double vitesse_angulaire_rad_s,
     int steps_moteur,
@@ -45,6 +58,30 @@ void Motor::run()
     }
 }
 
+void Motor::runFromTimerISR()
+{
+    if (m_ticksPerStep == 0) {
+        return;
+    }
+
+    // Keep STEP high for one timer tick to satisfy pulse width without blocking.
+    if (m_stepPulseHigh) {
+        digitalWrite(PIN_STEP, LOW);
+        m_stepPulseHigh = false;
+        return;
+    }
+
+    if (m_ticksUntilStep > 0) {
+        m_ticksUntilStep--;
+        return;
+    }
+
+    digitalWrite(PIN_STEP, HIGH);
+    m_stepPulseHigh = true;
+    m_ticksUntilStep = m_ticksPerStep;
+    m_stepCallback(m_cachedWheelForward);
+}
+
 void Motor::setLinearSpeed(float speed)
 {
     float speed_rad_s = speed/(m_WheelPerimeter/(2*PI)) * ( m_is_motor_inverted ? -1 : 1);
@@ -62,12 +99,32 @@ void Motor::setSpeed(float speed)
     // Pre-compute ISR fields: direction first, then interval (order matters
     // so the ISR never steps with a stale direction).
     m_cachedWheelForward = (speed > 0) != m_is_motor_inverted;
+    noInterrupts();
     if (speed == 0.0f) {
         m_interStepTime = 0;
+        m_ticksPerStep = 0;
+        m_ticksUntilStep = 0;
+        m_stepPulseHigh = false;
+        digitalWrite(PIN_STEP, LOW);
     } else {
         m_interStepTime = calculerTempsEntreSteps(
             abs(speed), config::STEP_PER_REVOLUTION, config::MICROSTEPS);
+        m_ticksPerStep = stepIntervalUsToTicks(m_interStepTime);
+        m_ticksUntilStep = 0;
     }
+    interrupts();
+}
+
+void Motor::stop()
+{
+    noInterrupts();
+    m_interStepTime = 0;
+    m_ticksPerStep = 0;
+    m_ticksUntilStep = 0;
+    m_stepPulseHigh = false;
+    m_speed = 0.0f;
+    digitalWrite(PIN_STEP, LOW);
+    interrupts();
 }
 
 void Motor::step()

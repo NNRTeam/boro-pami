@@ -27,7 +27,7 @@ class MissionError(ValueError):
 	pass
 
 
-DEFAULT_SERIAL_PORT = "/dev/motor"
+DEFAULT_SERIAL_PORT = "COM12"
 DEFAULT_BAUD = 115200
 
 
@@ -198,6 +198,9 @@ def oneTurn():
 if __name__ == '__main__':
 
 	reset()
+	turn(90)
+	turn(0)
+	
 	# stop()
 	#go(1.5, 0.0)
 
@@ -216,8 +219,8 @@ if __name__ == '__main__':
 	# go(1.0, 0.0)
 	# turn(90)
 	
-	for i in range(5):
-		oneTurn()
+	# for i in range(5):
+	# 	oneTurn()
 	#go(1.5, 0.0)
 
 	# for i in range(0, 3):

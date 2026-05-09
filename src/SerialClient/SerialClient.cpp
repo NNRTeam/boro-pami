@@ -20,12 +20,33 @@ void SerialClient::run()
 void SerialClient::receiveData() {
     if (!Serial.available())
         return;
-    String receivedData = "";
+
     while (Serial.available()) {
         char c = Serial.read();
-        if(c == 'F')
-            break;
-        receivedData += c;
+        if (c == 'F') {
+            processMessage(m_rxBuffer);
+            m_rxBuffer = "";
+            continue;
+        }
+
+        if (c == '\r' || c == '\n') {
+            continue;
+        }
+
+        m_rxBuffer += c;
+
+        // Guard against malformed streams with missing terminator.
+        if (m_rxBuffer.length() > 160) {
+            m_logger.warn("RX buffer overflow, dropping partial frame: " + m_rxBuffer);
+            m_rxBuffer = "";
+        }
+    }
+}
+
+void SerialClient::processMessage(String const &receivedData)
+{
+    if (receivedData.length() == 0) {
+        return;
     }
 
     if (receivedData[0] == 'R')
@@ -41,10 +62,6 @@ void SerialClient::receiveData() {
     {
         m_robot->parseOdometryData(receivedData);
     }
-    else if (receivedData[0] == 'D')
-    {
-        enterDFUMode();
-    }
     else
     {
         Mission mission;
@@ -52,28 +69,6 @@ void SerialClient::receiveData() {
             m_missionManager->addMission(mission);
             m_robot->emergencyStop(false);
         }
-    }
-}
-
-void SerialClient::enterDFUMode() {
-    // Pour Arduino Nano R4 (Renesas RA4M1):
-    // Utiliser l'USB pour se déconnecter et forcer un reset bootloader
-
-    Serial.end();  // Fermer le port série
-    Serial.flush();
-    delay(10);
-
-    // Écrire le magic word pour le bootloader Arduino dans la RAM backup
-    volatile uint32_t *const bootKeyAddr = (volatile uint32_t *)0x20007FFC;
-    *bootKeyAddr = 0x07738135;  // Magic key Arduino pour double reset
-
-    // Désactiver toutes les interruptions et déclencher un reset logiciel
-    __disable_irq();
-    NVIC_SystemReset();
-
-    // Ne devrait jamais arriver ici
-    while (1) {
-        __WFI();  // Wait For Interrupt
     }
 }
 

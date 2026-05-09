@@ -16,14 +16,16 @@ public:
 
     void run();
     void receiveData();
-    void enterDFUMode();
     void sendData();
     static SerialClient* instanceWrapper;
 private:
+    void processMessage(String const &receivedData);
+
     Logger& m_logger;
     missionManager* m_missionManager;
     Robot* m_robot;
     unsigned long long int m_last_odom_send = 0;
+    String m_rxBuffer = "";
 };
 
 #endif // I2CCLIENT_H

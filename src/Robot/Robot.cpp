@@ -2,9 +2,18 @@
 #include <Utils.h>
 #include <Arduino.h>
 #include <Config.h>
+#if defined(ARDUINO_ARCH_AVR)
+#include <avr/interrupt.h>
+#endif
 
 Robot* Robot::instance = nullptr;
-FspTimer Robot::m_stepTimer;
+
+#if defined(ARDUINO_ARCH_AVR)
+ISR(TIMER1_COMPA_vect)
+{
+    Robot::stepTimerISR();
+}
+#endif
 
 Robot::Robot(Logger& logger, missionManager *missionManager) : m_logger(logger), m_missionManager(missionManager)
 {
@@ -46,32 +55,42 @@ Robot::Robot(Logger& logger, missionManager *missionManager) : m_logger(logger),
     }
     Robot::instance = this;
 
-    // Setup hardware timer for motor stepping at high frequency
-    // so that Control() latency does not cause missed steps.
-    uint8_t timerType;
-    int8_t timerCh = FspTimer::get_available_timer(timerType);
-    if (timerCh >= 0) {
-        m_stepTimer.begin(TIMER_MODE_PERIODIC, timerType, timerCh,
-                          config::MOTOR_TIMER_FREQUENCY_HZ, 0.0f,
-                          Robot::stepTimerISR);
-        m_stepTimer.setup_overflow_irq();
-        m_stepTimer.open();
-        m_stepTimer.start();
-    }
-}
+#if defined(ARDUINO_ARCH_AVR)
+    noInterrupts();
+    TCCR1A = 0;
+    TCCR1B = 0;
+    TCNT1 = 0;
 
-void Robot::stepTimerISR(timer_callback_args_t __attribute__((unused)) *p_args)
-{
-    if (instance) {
-        instance->motor_left->run();
-        instance->motor_right->run();
+    // Timer1 CTC with prescaler /8.
+    unsigned long ocr = (F_CPU / (8UL * (unsigned long)config::MOTOR_TIMER_FREQUENCY_HZ)) - 1UL;
+    if (ocr > 65535UL) {
+        ocr = 65535UL;
     }
+    OCR1A = (uint16_t)ocr;
+    TCCR1B |= (1 << WGM12);
+    TCCR1B |= (1 << CS11);
+    TIMSK1 |= (1 << OCIE1A);
+    interrupts();
+#endif
 }
 
 void Robot::run() {
-    // Motor stepping is now handled by the hardware timer ISR.
-    // Only run the control loop here.
+#if defined(ARDUINO_ARCH_AVR)
+    // Motor stepping is driven by Timer1 ISR on AVR.
+#else
+    motor_left->run();
+    motor_right->run();
+#endif
     Control();
+}
+
+void Robot::stepTimerISR()
+{
+    if (instance == nullptr) {
+        return;
+    }
+    instance->motor_left->runFromTimerISR();
+    instance->motor_right->runFromTimerISR();
 }
 
 void Robot::resetOdometry() {

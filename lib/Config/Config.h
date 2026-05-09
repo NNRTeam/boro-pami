@@ -38,7 +38,7 @@ namespace config {
 
     // MOTION CONFIGURATION
 
-    float constexpr GO_MISSION_TOLERANCE_M = 0.005f;        // Tolerance for GO missions in meters
+    float constexpr GO_MISSION_TOLERANCE_M = 0.001f;        // Tolerance for GO missions in meters
     float constexpr TURN_MISSION_TOLERANCE_RAD = 0.01f;     // Tolerance for TURN missions in radians
 
     float constexpr MAX_LINEAR_VELOCITY_M_S = 0.5f;    // Maximum linear velocity in metter per second
@@ -63,7 +63,7 @@ namespace config {
 
 
     unsigned long int constexpr SERIAL_BAUDRATE = 115200; // Serial communication baudrate
-    bool constexpr ENABLE_SERIAL_DEBUG = false; // Enable or disable serial debug messages
+    bool constexpr ENABLE_SERIAL_DEBUG = true; // Enable or disable serial debug messages
 
     int constexpr I2C_ADD = 0x30; // I2C address for the robot
 
